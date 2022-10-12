@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <title>上传头像</title>
+  <style>
+    body,
+    html {
+      width: 100%;
+      height: 100%;
+      background: #f2f2f2;
+      padding: 0;
+      margin: 0;
+      font-size: 1em;
+    }
+
+    .button {
+      width: 80%;
+      background: green;
+      color: #fff;
+      padding: 10px;
+      text-align: center;
+      margin: 20px auto;
+      border-radius: 4px;
+      position: relative;
+    }
+
+    .upload-img {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      opacity: 0;
+    }
+
+    #previewImg {
+      max-width: 100%;
+    }
+
+  </style>
+</head>
+
+<body>
+  <section>
+    <img id="previewImg" src="https://avatars1.githubusercontent.com/u/25993112?s=460&v=4" alt="预览" />
+    <div class="button" role="button">
+      选择图片 <input type="file" name="file" class="upload-img" accept="image/*" onchange="chooseImg(this)" />
+    </div>
+  </section>
+  <script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+  <script src="https://unpkg.com/clipic/dist/clipic.min.js" type="text/javascript"></script>
+  <script>
+    var clipic = new Clipic()
+	
+	function convertToBlob(base64Str, fileType) {
+            var base64 = window.atob(base64Str);
+            var len = base64.length;
+            var buff = new ArrayBuffer(len);
+            var uarr = new Uint8Array(buff);
+
+            for (var i = 0; i < len; i++) {
+                uarr[i] = base64.charCodeAt(i);
+            }
+
+            var blob = null;
+
+            try {
+                blob = new Blob([buff], { type: fileType });
+            } catch (e) {
+                var BlobBuilder = window.BlobBuilder = (
+                    window.BlobBuilder ||
+                    window.WebKitBlobBuilder ||
+                    window.MozBlobBuilder ||
+                    window.MSBlobBuilder
+                );
+
+                if (e.name === "TypeError" && BlobBuilder) {
+                    var builder = new BlobBuilder();
+                    builder.append(buff);
+                    blob = builder.getBlob(fileType);
+                }
+            }
+
+            return blob;
+        }
+	
+	function upload(base64img,fileType){
+		var base64Str = base64img.substring(base64img.indexOf(',') + 1);
+		var blob = convertToBlob(base64Str,fileType);
+		var formData = new FormData();
+        formData.append("file", blob, 'img.png'); 
+        $.ajax({
+                url: 'http://120.46.206.116:8021/icon?k=234',
+                method: "POST",
+                data: formData,
+                cache: false,
+                processData: false,
+                contentType: false
+                });
+	}
+	
+    function chooseImg(event) {
+      var files = event.files || event.dataTransfer.files
+      var reader = new FileReader();
+      reader.readAsDataURL(files[0]);
+      reader.onload = e => {
+        clipic.getImage({
+          width: 512,
+          height: 512,
+          src: e.target.result,
+          name: 'test',
+          encode: 'base64',
+          type: 'png',
+          onDone: function (e) {
+            document.getElementById('previewImg').src = e;
+			upload(e,'image/png');
+          },
+          onCancel: function () {
+            console.log('取消裁剪');
+          }
+        })
+      }
+      event.value = ''
+    }
+  </script>
+</body>
+
+</html>
